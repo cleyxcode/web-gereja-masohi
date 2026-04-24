@@ -19,6 +19,7 @@ class LaporanKeuangan extends Model
         'saldo_awal',
         'total_penerimaan',
         'total_belanja',
+        'custom_fields',
         'keterangan',
         'file_laporan',
         'created_by',
@@ -30,6 +31,7 @@ class LaporanKeuangan extends Model
         'saldo_awal'        => 'decimal:2',
         'total_penerimaan'  => 'decimal:2',
         'total_belanja'     => 'decimal:2',
+        'custom_fields'     => 'array',
     ];
 
     // ─── Computed Attributes ────────────────────────────────────────────────
@@ -43,11 +45,22 @@ class LaporanKeuangan extends Model
     }
 
     /**
-     * Saldo Akhir = Jumlah Penerimaan - Total Belanja
+     * Saldo Akhir = Jumlah Penerimaan - Total Belanja +/- custom fields
      */
     public function getSaldoAkhirAttribute(): float
     {
-        return $this->jumlah_penerimaan - (float) $this->total_belanja;
+        $saldo = $this->jumlah_penerimaan - (float) $this->total_belanja;
+
+        // Hitung custom fields tambahan
+        if (!empty($this->custom_fields)) {
+            foreach ($this->custom_fields as $field) {
+                $jumlah = (float) ($field['jumlah'] ?? 0);
+                $tipe   = $field['tipe'] ?? 'tambah';
+                $saldo  = $tipe === 'kurang' ? $saldo - $jumlah : $saldo + $jumlah;
+            }
+        }
+
+        return $saldo;
     }
 
     /**

@@ -176,6 +176,22 @@
                             </td>
                         </tr>
 
+                        {{-- Baris Custom Tambahan --}}
+                        @if(!empty($laporan->custom_fields))
+                            @foreach($laporan->custom_fields as $cf)
+                            <tr class="border-b border-slate-100">
+                                <td></td>
+                                <td class="py-2.5 pl-4 text-slate-600">
+                                    {{ $cf['label'] ?? 'Data Tambahan' }}
+                                </td>
+                                <td class="py-2.5 text-right whitespace-nowrap {{ ($cf['tipe'] ?? 'tambah') === 'tambah' ? 'text-green-700' : 'text-red-600' }}">
+                                    {{ ($cf['tipe'] ?? 'tambah') === 'tambah' ? '+' : '-' }}
+                                    Rp.&nbsp;{{ number_format((float)($cf['jumlah'] ?? 0), 0, ',', '.') }}.
+                                </td>
+                            </tr>
+                            @endforeach
+                        @endif
+
                         {{-- Baris 5: Saldo Akhir (garis bawah dobel) --}}
                         <tr>
                             <td></td>

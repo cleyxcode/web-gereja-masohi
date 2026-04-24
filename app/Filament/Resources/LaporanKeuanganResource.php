@@ -32,15 +32,22 @@ class LaporanKeuanganResource extends Resource
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\Select::make('kategori')
+                        Forms\Components\TextInput::make('kategori')
                             ->label('Kategori')
-                            ->options([
-                                'murni'   => 'Saldo Murni',
-                                'ukp'     => 'Saldo UKP',
-                                'khusus'  => 'Dana Khusus',
-                            ])
+                            ->placeholder('Contoh: murni, ukp, khusus, diakonia...')
+                            ->helperText('Saran: Saldo Murni, Saldo UKP, Dana Khusus — atau isi sendiri sesuai kebutuhan')
                             ->required()
-                            ->native(false),
+                            ->datalist([
+                                'Saldo Murni',
+                                'Saldo UKP',
+                                'Dana Khusus',
+                                'Dana Diakonia',
+                                'Dana Renovasi',
+                                'Dana Natal',
+                                'Dana Paskah',
+                                'Dana Sosial',
+                            ])
+                            ->maxLength(100),
 
                         Forms\Components\TextInput::make('urutan')
                             ->label('Urutan Tampil')
@@ -127,6 +134,48 @@ class LaporanKeuanganResource extends Resource
                             }),
                     ])
                     ->columns(2),
+
+                // ── BARIS KUSTOM TAMBAHAN ──────────────────────────────────────────
+                Forms\Components\Section::make('Baris Data Tambahan (Opsional)')
+                    ->description('Tambahkan baris data kustom sesuai kebutuhan — akan tampil di laporan setelah data utama.')
+                    ->schema([
+                        Forms\Components\Repeater::make('custom_fields')
+                            ->label('')
+                            ->schema([
+                                Forms\Components\TextInput::make('label')
+                                    ->label('Keterangan Baris')
+                                    ->placeholder('Contoh: Penerimaan Persembahan Syukur')
+                                    ->required()
+                                    ->columnSpan(2),
+
+                                Forms\Components\Select::make('tipe')
+                                    ->label('Jenis')
+                                    ->options([
+                                        'tambah' => '(+) Menambah Saldo',
+                                        'kurang' => '(-) Mengurangi Saldo',
+                                    ])
+                                    ->default('tambah')
+                                    ->required()
+                                    ->native(false),
+
+                                Forms\Components\TextInput::make('jumlah')
+                                    ->label('Jumlah (Rp)')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->minValue(0)
+                                    ->step(1000)
+                                    ->required(),
+                            ])
+                            ->columns(4)
+                            ->addActionLabel('+ Tambah Baris')
+                            ->reorderable()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): ?string =>
+                                ($state['label'] ?? 'Baris Baru') . ' — Rp ' .
+                                number_format((float)($state['jumlah'] ?? 0), 0, ',', '.')
+                            ),
+                    ])
+                    ->collapsible(),
 
                 // ── KETERANGAN & FILE ──────────────────────────────────────────
                 Forms\Components\Section::make('Keterangan & File Pendukung')

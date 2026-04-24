@@ -15,26 +15,17 @@ return new class extends Migration
             $table->id();
 
             // Identitas laporan
-            $table->string('judul');                        // Contoh: "Saldo Murni", "Saldo UKP"
-            $table->string('kategori')->default('murni');   // murni | ukp | khusus
-            $table->date('periode_awal');                   // Tanggal awal saldo
-            $table->date('periode_akhir');                  // Tanggal akhir periode
-            $table->integer('urutan')->default(1);          // Urutan tampil (1, 2, ...)
-
-            // Data keuangan
-            $table->decimal('saldo_awal', 15, 2)->default(0);       // Saldo Per [tgl]
-            $table->decimal('total_penerimaan', 15, 2)->default(0); // Penerimaan tanggal s/d
-            $table->decimal('total_belanja', 15, 2)->default(0);    // Belanja Tanggal s/d
-
-            // Kolom computed (optional, bisa dihitung di model)
-            // jumlah_penerimaan = saldo_awal + total_penerimaan
-            // saldo_akhir = jumlah_penerimaan - total_belanja
-
-            // Catatan tambahan bebas (keterangan extra)
+            $table->string('judul');
+            $table->string('kategori')->default('murni');   // bebas: murni, ukp, khusus, dll
+            $table->date('periode_awal');
+            $table->date('periode_akhir');
+            $table->integer('urutan')->default(1);
+            $table->decimal('saldo_awal', 15, 2)->default(0);
+            $table->decimal('total_penerimaan', 15, 2)->default(0);
+            $table->decimal('total_belanja', 15, 2)->default(0);
+            $table->json('custom_fields')->nullable(); // baris tambahan bebas dari admin
             $table->text('keterangan')->nullable();
-
-            // Upload file laporan (opsional, menggantikan input manual)
-            $table->string('file_laporan')->nullable(); // path ke PDF/Excel
+            $table->string('file_laporan')->nullable();
 
             // Metadata
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
