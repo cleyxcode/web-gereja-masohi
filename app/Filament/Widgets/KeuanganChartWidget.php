@@ -4,92 +4,83 @@ namespace App\Filament\Widgets;
 
 use App\Models\LaporanKeuangan;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Carbon;
 
 class KeuanganChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Grafik Keuangan (6 Bulan Terakhir)';
-
+    protected static ?string $heading = 'Grafik Keuangan (Per Periode Laporan)';
     protected static ?int $sort = 2;
-
     protected static ?string $maxHeight = '300px';
 
     protected function getData(): array
     {
-        $now = now();
-        $months = collect();
-        
-        // Ambil 6 bulan terakhir
-        for ($i = 5; $i >= 0; $i--) {
-            $date = $now->copy()->subMonths($i);
-            $months->push([
-                'month' => $date->format('M Y'),
-                'year' => $date->year,
-                'month_num' => $date->month,
-            ]);
-        }
+        // Ambil 10 laporan terbaru, urut dari terlama ke terbaru
+        $laporan = LaporanKeuangan::orderBy('periode_akhir', 'asc')
+            ->latest('id')
+            ->take(10)
+            ->get()
+            ->reverse()
+            ->values();
 
-        $pemasukan = [];
-        $pengeluaran = [];
+        $labels      = [];
+        $penerimaan  = [];
+        $belanja     = [];
+        $saldoAkhir  = [];
 
-        foreach ($months as $month) {
-            $pemasukanTotal = LaporanKeuangan::where('jenis', 'pemasukan')
-                ->whereYear('tanggal', $month['year'])
-                ->whereMonth('tanggal', $month['month_num'])
-                ->sum('jumlah');
-            
-            $pengeluaranTotal = LaporanKeuangan::where('jenis', 'pengeluaran')
-                ->whereYear('tanggal', $month['year'])
-                ->whereMonth('tanggal', $month['month_num'])
-                ->sum('jumlah');
-
-            $pemasukan[] = $pemasukanTotal;
-            $pengeluaran[] = $pengeluaranTotal;
+        foreach ($laporan as $l) {
+            $labels[]     = $l->judul . ' (' . $l->periode_akhir->format('d/m/Y') . ')';
+            $penerimaan[] = (float) $l->total_penerimaan;
+            $belanja[]    = (float) $l->total_belanja;
+            $saldoAkhir[] = $l->saldo_akhir;
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Pemasukan',
-                    'data' => $pemasukan,
+                    'label'           => 'Penerimaan',
+                    'data'            => $penerimaan,
                     'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
-                    'borderColor' => 'rgb(34, 197, 94)',
-                    'borderWidth' => 2,
-                    'fill' => true,
+                    'borderColor'     => 'rgb(34, 197, 94)',
+                    'borderWidth'     => 2,
+                    'fill'            => true,
                 ],
                 [
-                    'label' => 'Pengeluaran',
-                    'data' => $pengeluaran,
+                    'label'           => 'Belanja',
+                    'data'            => $belanja,
                     'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
-                    'borderColor' => 'rgb(239, 68, 68)',
-                    'borderWidth' => 2,
-                    'fill' => true,
+                    'borderColor'     => 'rgb(239, 68, 68)',
+                    'borderWidth'     => 2,
+                    'fill'            => true,
+                ],
+                [
+                    'label'           => 'Saldo Akhir',
+                    'data'            => $saldoAkhir,
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.2)',
+                    'borderColor'     => 'rgb(59, 130, 246)',
+                    'borderWidth'     => 2,
+                    'fill'            => false,
                 ],
             ],
-            'labels' => $months->pluck('month')->toArray(),
+            'labels' => $labels,
         ];
     }
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
     }
 
     protected function getOptions(): array
     {
         return [
             'plugins' => [
-                'legend' => [
-                    'display' => true,
-                    'position' => 'top',
-                ],
+                'legend' => ['display' => true, 'position' => 'top'],
             ],
             'scales' => [
                 'y' => [
                     'beginAtZero' => true,
-                    'ticks' => [
-                        'callback' => 'function(value) { return "Rp " + value.toLocaleString("id-ID"); }',
-                    ],
+                ],
+                'x' => [
+                    'ticks' => ['maxRotation' => 45],
                 ],
             ],
         ];
