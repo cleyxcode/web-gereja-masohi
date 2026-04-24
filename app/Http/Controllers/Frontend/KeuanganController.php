@@ -24,18 +24,18 @@ class KeuanganController extends Controller
             ->whereYear('tanggal', $bulanLalu->year)
             ->whereMonth('tanggal', $bulanLalu->month)
             ->sum('jumlah');
-        
+
         $pengeluaranBulanLalu = LaporanKeuangan::where('jenis', 'pengeluaran')
             ->whereYear('tanggal', $bulanLalu->year)
             ->whereMonth('tanggal', $bulanLalu->month)
             ->sum('jumlah');
 
-        $pemasukanPercentage = $pemasukanBulanLalu > 0 
-            ? (($totalPemasukan - $pemasukanBulanLalu) / $pemasukanBulanLalu) * 100 
+        $pemasukanPercentage = $pemasukanBulanLalu > 0
+            ? (($totalPemasukan - $pemasukanBulanLalu) / $pemasukanBulanLalu) * 100
             : 0;
-        
-        $pengeluaranPercentage = $pengeluaranBulanLalu > 0 
-            ? (($totalPengeluaran - $pengeluaranBulanLalu) / $pengeluaranBulanLalu) * 100 
+
+        $pengeluaranPercentage = $pengeluaranBulanLalu > 0
+            ? (($totalPengeluaran - $pengeluaranBulanLalu) / $pengeluaranBulanLalu) * 100
             : 0;
 
         // Query untuk tabel
@@ -47,7 +47,7 @@ class KeuanganController extends Controller
         if ($request->filled('bulan')) {
             $date = \Carbon\Carbon::parse($request->bulan);
             $query->whereYear('tanggal', $date->year)
-                  ->whereMonth('tanggal', $date->month);
+                ->whereMonth('tanggal', $date->month);
         }
 
         // Filter by type
@@ -74,8 +74,8 @@ class KeuanganController extends Controller
         }
 
         return view('frontend.keuangan.index', compact(
-            'totalPemasukan', 
-            'totalPengeluaran', 
+            'totalPemasukan',
+            'totalPengeluaran',
             'saldo',
             'pemasukanPercentage',
             'pengeluaranPercentage',
@@ -84,13 +84,13 @@ class KeuanganController extends Controller
         ));
     }
 
-   public function export(Request $request)
-{
-    $fileName = 'laporan-keuangan-' . now()->format('Y-m-d') . '.xlsx';
+    public function export(Request $request)
+    {
+        $fileName = 'laporan-keuangan-' . now()->format('Y-m-d') . '.xlsx';
 
-    return Excel::download(
-        new LaporanKeuanganExport($request),
-        $fileName
-    );
-}
+        return Excel::download(
+            new LaporanKeuanganExport($request),
+            $fileName
+        );
+    }
 }

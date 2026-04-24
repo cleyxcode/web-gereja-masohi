@@ -1,22 +1,11 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+// Migration ini sudah tidak diperlukan karena kolom keterangan
+// sudah ada di migration utama create_laporan_keuangans_table.php
 return new class extends Migration
 {
-    public function up(): void
-    {
-        Schema::table('laporan_keuangan', function (Blueprint $table) {
-            $table->text('keterangan')->nullable()->after('jumlah');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('laporan_keuangan', function (Blueprint $table) {
-            $table->dropColumn('keterangan');
-        });
-    }
+    public function up(): void {}
+    public function down(): void {}
 };
