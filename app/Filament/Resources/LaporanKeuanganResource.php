@@ -49,13 +49,6 @@ class LaporanKeuanganResource extends Resource
                             ])
                             ->maxLength(100),
 
-                        Forms\Components\TextInput::make('urutan')
-                            ->label('Urutan Tampil')
-                            ->numeric()
-                            ->default(1)
-                            ->minValue(1)
-                            ->helperText('Angka kecil tampil lebih dulu (1, 2, 3...)'),
-
                         Forms\Components\DatePicker::make('periode_awal')
                             ->label('Tanggal Saldo Awal')
                             ->required()
@@ -210,30 +203,17 @@ class LaporanKeuanganResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('urutan')
-                    ->label('#')
-                    ->sortable()
-                    ->width(50),
-
                 Tables\Columns\TextColumn::make('judul')
                     ->label('Judul')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
-                Tables\Columns\BadgeColumn::make('kategori')
+                Tables\Columns\TextColumn::make('kategori')
                     ->label('Kategori')
-                    ->colors([
-                        'info'    => 'murni',
-                        'warning' => 'ukp',
-                        'success' => 'khusus',
-                    ])
-                    ->formatStateUsing(fn (string $state): string => match($state) {
-                        'murni'  => 'Saldo Murni',
-                        'ukp'    => 'Saldo UKP',
-                        'khusus' => 'Dana Khusus',
-                        default  => ucfirst($state),
-                    }),
+                    ->badge()
+                    ->color('info')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('periode_awal')
                     ->label('Periode Awal')
@@ -276,13 +256,17 @@ class LaporanKeuanganResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('kategori')
-                    ->label('Kategori')
-                    ->options([
-                        'murni'  => 'Saldo Murni',
-                        'ukp'    => 'Saldo UKP',
-                        'khusus' => 'Dana Khusus',
-                    ]),
+                Tables\Filters\Filter::make('kategori')
+                    ->form([
+                        Forms\Components\TextInput::make('kategori')
+                            ->label('Filter Kategori')
+                            ->placeholder('Contoh: murni, ukp, diakonia...'),
+                    ])
+                    ->query(fn ($query, array $data) =>
+                        $data['kategori']
+                            ? $query->where('kategori', 'like', '%' . $data['kategori'] . '%')
+                            : $query
+                    ),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -294,7 +278,7 @@ class LaporanKeuanganResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('urutan', 'asc');
+            ->defaultSort('periode_akhir', 'desc');
     }
 
     public static function getRelations(): array { return []; }
