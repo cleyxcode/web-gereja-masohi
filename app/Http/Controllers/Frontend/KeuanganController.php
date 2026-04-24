@@ -13,74 +13,50 @@ class KeuanganController extends Controller
 {
     public function index(Request $request)
     {
-        // Statistik
-        $totalPemasukan = LaporanKeuangan::where('jenis', 'pemasukan')->sum('jumlah');
-        $totalPengeluaran = LaporanKeuangan::where('jenis', 'pengeluaran')->sum('jumlah');
-        $saldo = $totalPemasukan - $totalPengeluaran;
+        // Query untuk tabel/list
+        $query = LaporanKeuangan::with('creator');
 
-        // Calculate percentage (example: dari bulan lalu)
-        $bulanLalu = now()->subMonth();
-        $pemasukanBulanLalu = LaporanKeuangan::where('jenis', 'pemasukan')
-            ->whereYear('tanggal', $bulanLalu->year)
-            ->whereMonth('tanggal', $bulanLalu->month)
-            ->sum('jumlah');
-
-        $pengeluaranBulanLalu = LaporanKeuangan::where('jenis', 'pengeluaran')
-            ->whereYear('tanggal', $bulanLalu->year)
-            ->whereMonth('tanggal', $bulanLalu->month)
-            ->sum('jumlah');
-
-        $pemasukanPercentage = $pemasukanBulanLalu > 0
-            ? (($totalPemasukan - $pemasukanBulanLalu) / $pemasukanBulanLalu) * 100
-            : 0;
-
-        $pengeluaranPercentage = $pengeluaranBulanLalu > 0
-            ? (($totalPengeluaran - $pengeluaranBulanLalu) / $pengeluaranBulanLalu) * 100
-            : 0;
-
-        // Query untuk tabel
-        $query = LaporanKeuangan::with('creator')
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('created_at', 'desc');
-
-        // Filter by month
-        if ($request->filled('bulan')) {
-            $date = \Carbon\Carbon::parse($request->bulan);
-            $query->whereYear('tanggal', $date->year)
-                ->whereMonth('tanggal', $date->month);
-        }
-
-        // Filter by type
-        if ($request->filled('jenis')) {
-            $query->where('jenis', $request->jenis);
+        // Filter Kategori
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
         }
 
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('keterangan', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                  ->orWhere('keterangan', 'like', "%{$search}%");
+            });
         }
 
-        $transaksiList = $query->paginate(10);
+        // Statistik Ringkasan
+        // 1. Total Penerimaan & Belanja (Sum dari database)
+        $totalPenerimaan = LaporanKeuangan::sum('total_penerimaan');
+        $totalBelanja = LaporanKeuangan::sum('total_belanja');
 
-        // Generate month options
-        $months = [];
-        for ($i = 0; $i < 12; $i++) {
-            $date = now()->subMonths($i);
-            $months[] = [
-                'value' => $date->format('Y-m'),
-                'label' => $date->isoFormat('MMMM YYYY')
-            ];
-        }
+        // 2. Total Saldo Akhir (Sum dari saldo akhir TERBARU tiap judul & kategori)
+        // Kita ambil record terbaru (id terbesar) untuk setiap kombinasi judul/kategori
+        $latestReports = LaporanKeuangan::whereIn('id', function($q) {
+            $q->select(DB::raw('MAX(id)'))
+              ->from('laporan_keuangan')
+              ->groupBy('judul', 'kategori');
+        })->get();
+
+        $totalSaldoAkhir = $latestReports->sum(fn($l) => (float) $l->saldo_akhir);
+        $terbilangTotal = LaporanKeuangan::terbilang((int) $totalSaldoAkhir) . ' Rupiah.';
+
+        // Paginate list untuk view
+        $laporanList = $query->orderBy('periode_akhir', 'desc')
+            ->orderBy('urutan', 'asc')
+            ->paginate(5);
 
         return view('frontend.keuangan.index', compact(
-            'totalPemasukan',
-            'totalPengeluaran',
-            'saldo',
-            'pemasukanPercentage',
-            'pengeluaranPercentage',
-            'transaksiList',
-            'months'
+            'totalPenerimaan',
+            'totalBelanja',
+            'totalSaldoAkhir',
+            'terbilangTotal',
+            'laporanList'
         ));
     }
 

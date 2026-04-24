@@ -16,6 +16,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class LaporanKeuanganExport implements
     FromCollection,
@@ -27,7 +28,8 @@ class LaporanKeuanganExport implements
     WithEvents
 {
     protected $request;
-    protected $total = 0;
+    protected $totalPenerimaan = 0;
+    protected $totalBelanja = 0;
 
     public function __construct($request)
     {
@@ -37,25 +39,24 @@ class LaporanKeuanganExport implements
     public function collection()
     {
         $query = LaporanKeuangan::with('creator')
-            ->orderBy('tanggal', 'desc');
+            ->orderBy('periode_akhir', 'desc');
 
-        if ($this->request->filled('bulan')) {
-            $date = \Carbon\Carbon::parse($this->request->bulan);
-            $query->whereYear('tanggal', $date->year)
-                  ->whereMonth('tanggal', $date->month);
-        }
-
-        if ($this->request->filled('jenis')) {
-            $query->where('jenis', $this->request->jenis);
+        if ($this->request->filled('kategori')) {
+            $query->where('kategori', $this->request->kategori);
         }
 
         if ($this->request->filled('search')) {
-            $query->where('keterangan', 'like', '%' . $this->request->search . '%');
+            $search = $this->request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                  ->orWhere('keterangan', 'like', "%{$search}%");
+            });
         }
 
         $data = $query->get();
 
-        $this->total = $data->sum('jumlah');
+        $this->totalPenerimaan = $data->sum('total_penerimaan');
+        $this->totalBelanja = $data->sum('total_belanja');
 
         return $data;
     }
@@ -63,10 +64,13 @@ class LaporanKeuanganExport implements
     public function headings(): array
     {
         return [
-            'Tanggal',
-            'Jenis',
-            'Keterangan',
-            'Jumlah (Rp)',
+            'Judul Laporan',
+            'Kategori',
+            'Periode',
+            'Saldo Awal',
+            'Penerimaan',
+            'Belanja',
+            'Saldo Akhir',
             'Dibuat Oleh'
         ];
     }
@@ -74,10 +78,13 @@ class LaporanKeuanganExport implements
     public function map($row): array
     {
         return [
-            $row->tanggal->format('d-m-Y'),
-            ucfirst($row->jenis),
-            $row->keterangan,
-            $row->jumlah,
+            $row->judul,
+            ucfirst($row->kategori),
+            $row->periode_awal->format('d/m/Y') . ' - ' . $row->periode_akhir->format('d/m/Y'),
+            $row->saldo_awal,
+            $row->total_penerimaan,
+            $row->total_belanja,
+            $row->saldo_akhir,
             $row->creator->name ?? '-',
         ];
     }
@@ -87,6 +94,9 @@ class LaporanKeuanganExport implements
     {
         return [
             'D' => '"Rp" #,##0_-',
+            'E' => '"Rp" #,##0_-',
+            'F' => '"Rp" #,##0_-',
+            'G' => '"Rp" #,##0_-',
         ];
     }
 
@@ -98,6 +108,10 @@ class LaporanKeuanganExport implements
                 'font' => ['bold' => true],
                 'alignment' => [
                     'horizontal' => Alignment::HORIZONTAL_CENTER
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'E2E8F0']
                 ]
             ],
         ];
@@ -113,14 +127,17 @@ class LaporanKeuanganExport implements
                 $lastRow = $sheet->getHighestRow();
 
                 // PERLUAS KOLOM MANUAL
-                $sheet->getColumnDimension('A')->setWidth(15);
-                $sheet->getColumnDimension('B')->setWidth(18);
-                $sheet->getColumnDimension('C')->setWidth(40);
-                $sheet->getColumnDimension('D')->setWidth(20);
-                $sheet->getColumnDimension('E')->setWidth(25);
+                $sheet->getColumnDimension('A')->setWidth(30);
+                $sheet->getColumnDimension('B')->setWidth(15);
+                $sheet->getColumnDimension('C')->setWidth(25);
+                $sheet->getColumnDimension('D')->setWidth(18);
+                $sheet->getColumnDimension('E')->setWidth(18);
+                $sheet->getColumnDimension('F')->setWidth(18);
+                $sheet->getColumnDimension('G')->setWidth(18);
+                $sheet->getColumnDimension('H')->setWidth(25);
 
                 // BORDER SEMUA TABEL
-                $sheet->getStyle('A1:E' . $lastRow)
+                $sheet->getStyle('A1:H' . $lastRow)
                     ->getBorders()
                     ->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN);
@@ -129,9 +146,10 @@ class LaporanKeuanganExport implements
                 $totalRow = $lastRow + 1;
 
                 $sheet->setCellValue('C' . $totalRow, 'TOTAL');
-                $sheet->setCellValue('D' . $totalRow, $this->total);
+                $sheet->setCellValue('E' . $totalRow, $this->totalPenerimaan);
+                $sheet->setCellValue('F' . $totalRow, $this->totalBelanja);
 
-                $sheet->getStyle('C' . $totalRow . ':D' . $totalRow)->applyFromArray([
+                $sheet->getStyle('C' . $totalRow . ':G' . $totalRow)->applyFromArray([
                     'font' => [
                         'bold' => true
                     ],
@@ -139,11 +157,15 @@ class LaporanKeuanganExport implements
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN
                         ]
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'F8FAFC']
                     ]
                 ]);
 
                 // FORMAT RUPIAH UNTUK TOTAL
-                $sheet->getStyle('D' . $totalRow)
+                $sheet->getStyle('E' . $totalRow . ':F' . $totalRow)
                     ->getNumberFormat()
                     ->setFormatCode('"Rp" #,##0_-');
             },
