@@ -4,13 +4,15 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Faker\Factory as Faker;
+
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create('id_ID');
+        $sektors = ['Sektor 1', 'Sektor 2', 'Sektor 3', 'Sektor 4', 'Sektor 5'];
+        $units   = ['Unit A', 'Unit B', 'Unit C', 'Unit D'];
+        $genders = ['Laki-laki', 'Perempuan'];
 
         // ─── Admin ───────────────────────────────────────────────────────────
         User::updateOrCreate(['email' => 'admin@gerejabethesda.com'], [
@@ -25,8 +27,7 @@ class UserSeeder extends Seeder
             'is_approved'   => true,
         ]);
 
-        $sektors = ['Sektor 1', 'Sektor 2', 'Sektor 3', 'Sektor 4', 'Sektor 5'];
-        $units   = ['Unit A', 'Unit B', 'Unit C', 'Unit D'];
+
 
         // ─── Data Lama Jemaat (50) ───────────────────────────────────────────
         $jemaatLama = [
@@ -209,14 +210,26 @@ class UserSeeder extends Seeder
             ];
         }
 
-        // ─── Tambah 50 Data Faker ──────────────────────────────────────────────
-        for ($i = 0; $i < 50; $i++) {
+        // ─── Tambah data statis pengganti Faker ────────────────────────────────
+        $extraUsers = [
+            ['name' => 'Yosef Laturette',    'email' => 'yosef.lat2@email.com',   'no_hp' => '082312341001', 'alamat' => 'Jl. Pattimura No. 50, Ambon',   'jenis_kelamin' => 'Laki-laki'],
+            ['name' => 'Rifka Tuasikal',     'email' => 'rifka.tua2@email.com',   'no_hp' => '082312341002', 'alamat' => 'Jl. Sirimau No. 8, Ambon',       'jenis_kelamin' => 'Perempuan'],
+            ['name' => 'Hendra Wattimena',   'email' => 'hendra.wat@email.com',   'no_hp' => '082312341003', 'alamat' => 'Jl. Batu Merah No. 18, Ambon',   'jenis_kelamin' => 'Laki-laki'],
+            ['name' => 'Sonia Matulessy',    'email' => 'sonia.mat@email.com',    'no_hp' => '082312341004', 'alamat' => 'Jl. Rijali No. 10, Ambon',       'jenis_kelamin' => 'Perempuan'],
+            ['name' => 'Doni Sipahelut',     'email' => 'doni.sip@email.com',     'no_hp' => '082312341005', 'alamat' => 'Jl. A. Y. Patty No. 33, Ambon',  'jenis_kelamin' => 'Laki-laki'],
+            ['name' => 'Linda Soulissa',     'email' => 'linda.sou2@email.com',   'no_hp' => '082312341006', 'alamat' => 'Jl. Nusaniwe No. 11, Ambon',     'jenis_kelamin' => 'Perempuan'],
+            ['name' => 'Rinto Sahalessy',    'email' => 'rinto.sah@email.com',    'no_hp' => '082312341007', 'alamat' => 'Jl. Halong No. 27, Ambon',       'jenis_kelamin' => 'Laki-laki'],
+            ['name' => 'Evi Lewerissa',      'email' => 'evi.lew@email.com',      'no_hp' => '082312341008', 'alamat' => 'Jl. Passo No. 4, Ambon',         'jenis_kelamin' => 'Perempuan'],
+            ['name' => 'Niko Rehatta',       'email' => 'niko.reh@email.com',     'no_hp' => '082312341009', 'alamat' => 'Jl. Galala No. 39, Ambon',       'jenis_kelamin' => 'Laki-laki'],
+            ['name' => 'Tini Picauly',       'email' => 'tini.pic@email.com',     'no_hp' => '082312341010', 'alamat' => 'Jl. Waihoka No. 16, Ambon',      'jenis_kelamin' => 'Perempuan'],
+        ];
+        foreach ($extraUsers as $data) {
             $allUsers[] = [
-                'name'          => $faker->name,
-                'email'         => $faker->unique()->safeEmail,
-                'no_hp'         => $faker->phoneNumber,
-                'alamat'        => $faker->address,
-                'jenis_kelamin' => null,
+                'name'          => $data['name'],
+                'email'         => $data['email'],
+                'no_hp'         => $data['no_hp'],
+                'alamat'        => $data['alamat'],
+                'jenis_kelamin' => $data['jenis_kelamin'],
             ];
         }
 
@@ -231,9 +244,9 @@ class UserSeeder extends Seeder
                     'role'          => 'jemaat',
                     'no_hp'         => $u['no_hp'],
                     'alamat'        => $u['alamat'],
-                    'jenis_kelamin' => $u['jenis_kelamin'] ?? $faker->randomElement(['Laki-laki', 'Perempuan']),
-                    'sektor'        => $faker->randomElement($sektors),
-                    'unit'          => $faker->randomElement($units),
+                    'jenis_kelamin' => $u['jenis_kelamin'] ?? $genders[array_rand($genders)],
+                    'sektor'        => $sektors[array_rand($sektors)],
+                    'unit'          => $units[array_rand($units)],
                     'is_approved'   => true,
                 ]
             );
