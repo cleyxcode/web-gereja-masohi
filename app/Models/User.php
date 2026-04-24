@@ -3,16 +3,14 @@
 namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 use App\Notifications\ResetPasswordNotification;
 
-class User extends Authenticatable implements FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
 
@@ -26,8 +24,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'unit',
         'no_hp',
         'alamat',
-        'avatar',
-        'avatar_url',   // dipakai filament-edit-profile
         'is_approved',
     ];
 
@@ -59,38 +55,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return true;
         }
         return $this->is_approved === true;
-    }
-
-    /**
-     * Avatar URL untuk Filament (dipakai filament-edit-profile).
-     * Prioritas: avatar_url → avatar (kolom lama)
-     */
-    public function getFilamentAvatarUrl(): ?string
-    {
-        $avatarColumn = config('filament-edit-profile.avatar_column', 'avatar_url');
-
-        // Gunakan getAttribute() agar aman meski kolom belum ada di DB
-        $avatarValue = $this->getAttribute($avatarColumn);
-
-        if ($avatarValue) {
-            return Storage::url($avatarValue);
-        }
-
-        // Fallback ke kolom avatar lama
-        $oldAvatar = $this->getAttribute('avatar');
-        if ($oldAvatar) {
-            return Storage::disk('public')->url($oldAvatar);
-        }
-
-        return null;
-    }
-
-    /**
-     * @deprecated Gunakan getFilamentAvatarUrl() sebagai gantinya.
-     */
-    public function getAvatarUrlAttribute(): ?string
-    {
-        return $this->getFilamentAvatarUrl();
     }
 
     public function pendaftaran(): HasMany

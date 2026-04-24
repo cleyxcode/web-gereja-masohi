@@ -57,16 +57,12 @@ class AdminPanelProvider extends PanelProvider
                     ->setNavigationGroup('Pengaturan')
                     ->setIcon('heroicon-o-user-circle')
                     ->setSort(99)
-                    ->shouldRegisterNavigation(false) // Akses via user menu, bukan sidebar
+                    ->shouldRegisterNavigation(false)
                     ->shouldShowEmailForm(true)
-                    ->shouldShowDeleteAccountForm(false) // Admin tidak bisa hapus akunnya sendiri
+                    ->shouldShowDeleteAccountForm(false)
                     ->shouldShowBrowserSessionsForm(false)
                     ->shouldShowSanctumTokens(false)
-                    ->shouldShowAvatarForm(
-                        value: true,
-                        directory: 'avatars',
-                        rules: 'mimes:jpeg,jpg,png,webp|max:2048'
-                    ),
+                    ->shouldShowAvatarForm(false),
             ])
             ->userMenuItems([
                 'profile' => MenuItem::make()
