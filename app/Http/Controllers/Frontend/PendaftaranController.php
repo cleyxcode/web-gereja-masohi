@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pendaftaran;
+use App\Models\User;
+use App\Notifications\PendaftaranMasukNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -143,6 +145,12 @@ class PendaftaranController extends Controller
             }
 
             $pendaftaran = Pendaftaran::create($data);
+
+            // Kirim notifikasi ke semua admin (in-app Filament + email)
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new PendaftaranMasukNotification($pendaftaran->load('user')));
+            }
 
             return response()->json([
                 'success' => true,
