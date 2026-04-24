@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use App\Notifications\ResetPasswordNotification;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     use HasFactory, Notifiable;
 
@@ -25,6 +27,7 @@ class User extends Authenticatable implements FilamentUser
         'no_hp',
         'alamat',
         'avatar',
+        'avatar_url',   // dipakai filament-edit-profile
         'is_approved',
     ];
 
@@ -38,6 +41,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'is_approved'       => 'boolean',
+            'password'          => 'hashed',
         ];
     }
 
@@ -47,24 +51,42 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Apakah user sudah disetujui admin dan boleh login
+     * Apakah user sudah disetujui admin dan boleh login.
      */
     public function isApproved(): bool
     {
-        // Admin selalu bisa login
         if ($this->role === 'admin') {
             return true;
         }
         return $this->is_approved === true;
     }
 
-    
-    public function getAvatarUrlAttribute()
+    /**
+     * Avatar URL untuk Filament (dipakai filament-edit-profile).
+     * Prioritas: avatar_url → avatar (kolom lama)
+     */
+    public function getFilamentAvatarUrl(): ?string
     {
-        if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+        $avatarColumn = config('filament-edit-profile.avatar_column', 'avatar_url');
+
+        if ($this->$avatarColumn) {
+            return Storage::url($this->$avatarColumn);
         }
+
+        // Fallback ke kolom avatar lama
+        if ($this->avatar) {
+            return Storage::disk('public')->url($this->avatar);
+        }
+
         return null;
+    }
+
+    /**
+     * @deprecated Gunakan getFilamentAvatarUrl() sebagai gantinya.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->getFilamentAvatarUrl();
     }
 
     public function pendaftaran(): HasMany
@@ -76,7 +98,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Saran::class);
     }
-    
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
