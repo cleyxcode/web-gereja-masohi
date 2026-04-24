@@ -1,25 +1,11 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+// Migration ini sudah digabungkan ke: 0001_01_01_000000_create_users_table.php
+// File ini dikosongkan agar tidak dieksekusi ulang.
 return new class extends Migration
 {
-    public function up(): void
-    {
-        Schema::table('users', function (Blueprint $table) {
-            // Kolom avatar_url dibutuhkan oleh filament-edit-profile
-            if (!Schema::hasColumn('users', 'avatar_url')) {
-                $table->string('avatar_url')->nullable()->after('avatar');
-            }
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('avatar_url');
-        });
-    }
+    public function up(): void {}
+    public function down(): void {}
 };
