@@ -69,13 +69,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         $avatarColumn = config('filament-edit-profile.avatar_column', 'avatar_url');
 
-        if ($this->$avatarColumn) {
-            return Storage::url($this->$avatarColumn);
+        // Gunakan getAttribute() agar aman meski kolom belum ada di DB
+        $avatarValue = $this->getAttribute($avatarColumn);
+
+        if ($avatarValue) {
+            return Storage::url($avatarValue);
         }
 
         // Fallback ke kolom avatar lama
-        if ($this->avatar) {
-            return Storage::disk('public')->url($this->avatar);
+        $oldAvatar = $this->getAttribute('avatar');
+        if ($oldAvatar) {
+            return Storage::disk('public')->url($oldAvatar);
         }
 
         return null;
