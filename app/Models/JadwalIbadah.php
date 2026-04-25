@@ -27,4 +27,18 @@ class JadwalIbadah extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    protected static function booted(): void
+    {
+        static::created(function (JadwalIbadah $jadwal) {
+            \App\Jobs\SendJadwalEmailJob::dispatch($jadwal, false);
+        });
+
+        static::updated(function (JadwalIbadah $jadwal) {
+            // Check if there are changes before sending email
+            if ($jadwal->wasChanged()) {
+                \App\Jobs\SendJadwalEmailJob::dispatch($jadwal, true);
+            }
+        });
+    }
 }
