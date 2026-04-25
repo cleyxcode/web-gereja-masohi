@@ -21,4 +21,11 @@ class CreateJadwalIbadah extends CreateRecord
     {
         return $this->getResource()::getUrl('index');
     }
+
+    protected function afterCreate(): void
+    {
+        if ($this->data['send_email_notification'] ?? false) {
+            \App\Jobs\SendJadwalEmailJob::dispatch($this->record, false);
+        }
+    }
 }

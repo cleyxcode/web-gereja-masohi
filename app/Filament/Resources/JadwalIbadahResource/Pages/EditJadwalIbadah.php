@@ -21,4 +21,11 @@ class EditJadwalIbadah extends EditRecord
     {
         return $this->getResource()::getUrl('index');
     }
+
+    protected function afterSave(): void
+    {
+        if ($this->data['send_email_notification'] ?? false) {
+            \App\Jobs\SendJadwalEmailJob::dispatch($this->record, true);
+        }
+    }
 }

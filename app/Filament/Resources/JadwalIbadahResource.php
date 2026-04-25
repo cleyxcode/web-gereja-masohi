@@ -69,6 +69,13 @@ class JadwalIbadahResource extends Resource
                     ->acceptedFileTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
                     ->maxSize(5120)
                     ->columnSpanFull(),
+
+                Forms\Components\Toggle::make('send_email_notification')
+                    ->label('Kirim Notifikasi Email ke Jemaat')
+                    ->helperText('Jika diaktifkan, sistem akan mengirim email pemberitahuan ke seluruh jemaat yang terdaftar.')
+                    ->default(false)
+                    ->dehydrated(false)
+                    ->columnSpanFull(),
             ]);
     }
 
