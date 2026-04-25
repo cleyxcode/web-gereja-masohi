@@ -19,4 +19,11 @@ class Saran extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    protected static function booted(): void
+    {
+        static::created(function (Saran $saran) {
+            \App\Jobs\SendSaranEmailToAdminJob::dispatch($saran);
+        });
+    }
 }
