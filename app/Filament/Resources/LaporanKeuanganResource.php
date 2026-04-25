@@ -74,8 +74,11 @@ class LaporanKeuanganResource extends Resource
                             ->numeric()
                             ->prefix('Rp')
                             ->minValue(0)
-                            ->step(1000)
+                            ->step(1)
                             ->live(onBlur: true)
+                            ->extraInputAttributes(['step' => '1'])
+                            ->inputMode('numeric')
+                            ->placeholder('0')
                             ->helperText(fn (Get $get) =>
                                 'Saldo Per ' . ($get('periode_awal')
                                     ? \Carbon\Carbon::parse($get('periode_awal'))->translatedFormat('d F Y')
@@ -88,8 +91,11 @@ class LaporanKeuanganResource extends Resource
                             ->numeric()
                             ->prefix('Rp')
                             ->minValue(0)
-                            ->step(1000)
+                            ->step(1)
                             ->live(onBlur: true)
+                            ->extraInputAttributes(['step' => '1'])
+                            ->inputMode('numeric')
+                            ->placeholder('0')
                             ->helperText(fn (Get $get) =>
                                 'Penerimaan ' . (($get('periode_awal') && $get('periode_akhir'))
                                     ? \Carbon\Carbon::parse($get('periode_awal'))->translatedFormat('d F Y') . ' s/d ' .
@@ -103,8 +109,11 @@ class LaporanKeuanganResource extends Resource
                             ->numeric()
                             ->prefix('Rp')
                             ->minValue(0)
-                            ->step(1000)
+                            ->step(1)
                             ->live(onBlur: true)
+                            ->extraInputAttributes(['step' => '1'])
+                            ->inputMode('numeric')
+                            ->placeholder('0')
                             ->helperText(fn (Get $get) =>
                                 'Belanja ' . (($get('periode_awal') && $get('periode_akhir'))
                                     ? \Carbon\Carbon::parse($get('periode_awal'))->translatedFormat('d F Y') . ' s/d ' .
@@ -114,16 +123,39 @@ class LaporanKeuanganResource extends Resource
 
                         // Preview saldo akhir otomatis
                         Forms\Components\Placeholder::make('preview_saldo')
-                            ->label('📊 Preview Saldo Akhir')
-                            ->content(function (Get $get): string {
+                            ->label('📊 Ringkasan Saldo')
+                            ->content(function (Get $get): \Illuminate\Support\HtmlString {
                                 $saldoAwal       = (float) ($get('saldo_awal') ?? 0);
                                 $penerimaan      = (float) ($get('total_penerimaan') ?? 0);
                                 $belanja         = (float) ($get('total_belanja') ?? 0);
+                                
                                 $jumlahPenerimaan = $saldoAwal + $penerimaan;
-                                $saldoAkhir      = $jumlahPenerimaan - $belanja;
+                                $saldoAkhir       = $jumlahPenerimaan - $belanja;
 
-                                return 'Jumlah Penerimaan: Rp ' . number_format($jumlahPenerimaan, 0, ',', '.') .
-                                    ' | Saldo Akhir: Rp ' . number_format($saldoAkhir, 0, ',', '.');
+                                // Hitung custom fields
+                                $customFields = $get('custom_fields') ?? [];
+                                foreach ($customFields as $field) {
+                                    $jumlah = (float) ($field['jumlah'] ?? 0);
+                                    $tipe   = $field['tipe'] ?? 'tambah';
+                                    $saldoAkhir = ($tipe === 'kurang') ? $saldoAkhir - $jumlah : $saldoAkhir + $jumlah;
+                                }
+
+                                return new \Illuminate\Support\HtmlString("
+                                    <div class='p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 space-y-2'>
+                                        <div class='flex justify-between'>
+                                            <span class='text-gray-600 dark:text-gray-400'>Total Penerimaan (Masuk):</span>
+                                            <span class='font-semibold text-success-600'>Rp " . number_format($jumlahPenerimaan, 0, ',', '.') . "</span>
+                                        </div>
+                                        <div class='flex justify-between'>
+                                            <span class='text-gray-600 dark:text-gray-400'>Total Belanja (Keluar):</span>
+                                            <span class='font-semibold text-danger-600'>Rp " . number_format($belanja, 0, ',', '.') . "</span>
+                                        </div>
+                                        <div class='flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700'>
+                                            <span class='font-bold text-gray-900 dark:text-white'>SALDO AKHIR:</span>
+                                            <span class='font-black text-primary-600 text-lg'>Rp " . number_format($saldoAkhir, 0, ',', '.') . "</span>
+                                        </div>
+                                    </div>
+                                ");
                             }),
                     ])
                     ->columns(2),
@@ -149,15 +181,17 @@ class LaporanKeuanganResource extends Resource
                                     ])
                                     ->default('tambah')
                                     ->required()
-                                    ->native(false),
+                                    ->native(false)
+                                    ->live(),
 
                                 Forms\Components\TextInput::make('jumlah')
                                     ->label('Jumlah (Rp)')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->minValue(0)
-                                    ->step(1000)
-                                    ->required(),
+                                    ->step(1)
+                                    ->required()
+                                    ->live(onBlur: true),
                             ])
                             ->columns(4)
                             ->addActionLabel('+ Tambah Baris')

@@ -91,10 +91,14 @@ class LaporanKeuangan extends Model
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     /**
-     * Konversi angka ke terbilang Indonesia (sampai ratusan miliar)
+     * Konversi angka ke terbilang Indonesia (sampai ratusan triliun)
      */
     public static function terbilang(int $angka): string
     {
+        if ($angka === 0) {
+            return 'Nol';
+        }
+
         $angka = abs($angka);
         $huruf = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
 
@@ -116,6 +120,8 @@ class LaporanKeuangan extends Model
             return self::terbilang((int)($angka / 1000000)) . ' Juta ' . self::terbilang($angka % 1000000);
         } elseif ($angka < 1000000000000) {
             return self::terbilang((int)($angka / 1000000000)) . ' Miliar ' . self::terbilang($angka % 1000000000);
+        } elseif ($angka < 1000000000000000) {
+            return self::terbilang((int)($angka / 1000000000000)) . ' Triliun ' . self::terbilang($angka % 1000000000000);
         }
 
         return '';
