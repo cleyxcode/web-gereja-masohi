@@ -47,6 +47,19 @@ class LaporanKeuanganResource extends Resource
                                 'Dana Paskah',
                                 'Dana Sosial',
                             ])
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Forms\Set $set, ?string $state) {
+                                if ($state && !$get('saldo_awal')) {
+                                    $lastLaporan = \App\Models\LaporanKeuangan::where('kategori', $state)
+                                        ->orderBy('periode_akhir', 'desc')
+                                        ->first();
+                                    
+                                    if ($lastLaporan) {
+                                        $set('saldo_awal', $lastLaporan->saldo_akhir);
+                                        $set('periode_awal', $lastLaporan->periode_akhir->addDay()->format('Y-m-d'));
+                                    }
+                                }
+                            })
                             ->maxLength(100),
 
                         Forms\Components\DatePicker::make('periode_awal')
@@ -79,8 +92,10 @@ class LaporanKeuanganResource extends Resource
                             ->extraInputAttributes(['step' => '1'])
                             ->inputMode('numeric')
                             ->placeholder('0')
+                            ->prefix('Rp')
                             ->helperText(fn (Get $get) =>
-                                'Saldo Per ' . ($get('periode_awal')
+                                ($get('saldo_awal') ? 'Terbilang: ' . \App\Models\LaporanKeuangan::terbilang((int)$get('saldo_awal')) . ' Rupiah.' : '') . 
+                                ' | Saldo Per ' . ($get('periode_awal')
                                     ? \Carbon\Carbon::parse($get('periode_awal'))->translatedFormat('d F Y')
                                     : '...')
                             ),
@@ -191,7 +206,8 @@ class LaporanKeuanganResource extends Resource
                                     ->minValue(0)
                                     ->step(1)
                                     ->required()
-                                    ->live(onBlur: true),
+                                    ->live(onBlur: true)
+                                    ->prefix('Rp'),
                             ])
                             ->columns(4)
                             ->addActionLabel('+ Tambah Baris')
