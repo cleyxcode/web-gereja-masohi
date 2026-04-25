@@ -88,14 +88,20 @@
                     </p>
 
                     @if($saran->status == 'dibaca')
-                    <div class="bg-background-light rounded-lg p-3 text-xs text-[#60708a] flex gap-2 items-start">
+                    <div class="bg-background-light rounded-lg p-3 text-xs text-[#60708a] flex gap-2 items-start border border-[#dbdfe6]/50">
                         <span class="material-symbols-outlined text-[16px] text-amber-500 mt-0.5">info</span>
-                        <p>Admin: "Terima kasih atas masukannya, akan kami tindaklanjuti."</p>
+                        <div>
+                            <p class="font-bold mb-1">Tanggapan Admin:</p>
+                            <p>"{{ $saran->balasan ?: 'Terima kasih atas masukannya, akan kami tindaklanjuti.' }}"</p>
+                        </div>
                     </div>
                     @elseif($saran->status == 'ditindaklanjuti')
                     <div class="bg-emerald-50 rounded-lg p-3 text-xs text-emerald-800 flex gap-2 items-start border border-emerald-100">
                         <span class="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5">check_circle</span>
-                        <p>Admin: "Saran Anda telah kami tindaklanjuti. Terima kasih atas partisipasinya."</p>
+                        <div>
+                            <p class="font-bold mb-1 text-emerald-900">Tanggapan Admin:</p>
+                            <p>"{{ $saran->balasan ?: 'Saran Anda telah kami tindaklanjuti. Terima kasih atas partisipasinya.' }}"</p>
+                        </div>
                     </div>
                     @endif
                 </div>

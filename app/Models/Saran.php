@@ -13,6 +13,7 @@ class Saran extends Model
         'user_id',
         'isi_saran',
         'status',
+        'balasan',
     ];
 
     public function user(): BelongsTo
@@ -24,6 +25,13 @@ class Saran extends Model
     {
         static::created(function (Saran $saran) {
             \App\Jobs\SendSaranEmailToAdminJob::dispatch($saran);
+        });
+
+        static::updated(function (Saran $saran) {
+            // Send email to user when status changes or balasan is updated
+            if ($saran->wasChanged('status') || $saran->wasChanged('balasan')) {
+                \App\Jobs\SendSaranUserEmailJob::dispatch($saran);
+            }
         });
     }
 }

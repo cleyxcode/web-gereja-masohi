@@ -50,6 +50,13 @@ class SaranResource extends Resource
                     ->required()
                     ->native(false)
                     ->hiddenOn('create'),
+
+                Forms\Components\Textarea::make('balasan')
+                    ->label('Tanggapan / Balasan Admin')
+                    ->placeholder('Tuliskan tanggapan resmi untuk jemaat di sini...')
+                    ->rows(3)
+                    ->columnSpanFull()
+                    ->helperText('Jika diisi, pesan ini akan dikirimkan ke email jemaat.'),
             ]);
     }
 
