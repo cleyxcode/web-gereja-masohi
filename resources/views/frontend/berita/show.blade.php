@@ -56,7 +56,16 @@
                     <div class="flex flex-wrap items-center gap-4 text-sm text-[#60708a]">
                         <div class="flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-[18px]">calendar_today</span>
-                            <span>{{ $berita->created_at->isoFormat('dddd, D MMMM YYYY') }}</span>
+                            @if($berita->tanggal)
+                            <div class="flex items-center gap-1.5" title="Tanggal Berita">
+                                <span class="material-symbols-outlined text-[18px]">event</span>
+                                <span>{{ $berita->tanggal->isoFormat('dddd, D MMMM YYYY') }}</span>
+                            </div>
+                            @endif
+                            <div class="flex items-center gap-1.5" title="Tanggal Upload">
+                                <span class="material-symbols-outlined text-[18px]">upload</span>
+                                <span>{{ $berita->created_at->isoFormat('dddd, D MMMM YYYY') }}</span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-[18px]">person</span>

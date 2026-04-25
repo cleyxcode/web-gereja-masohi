@@ -13,7 +13,12 @@ class Berita extends Model
         'judul',
         'isi',
         'gambar',
+        'tanggal',
         'created_by',
+    ];
+
+    protected $casts = [
+        'tanggal' => 'date',
     ];
 
     public function creator(): BelongsTo

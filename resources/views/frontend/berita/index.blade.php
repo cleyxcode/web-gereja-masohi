@@ -72,7 +72,16 @@
             <div class="flex flex-col flex-1 p-6">
                 <div class="flex items-center gap-2 text-sm text-[#60708a] mb-3">
                     <span class="material-symbols-outlined text-[18px]">calendar_today</span>
-                    <span>{{ $berita->created_at->isoFormat('D MMMM YYYY') }}</span>
+                    @if($berita->tanggal)
+                        <span class="flex items-center gap-1" title="Tanggal Berita">
+                            <span class="material-symbols-outlined text-[16px]">event</span>
+                            {{ $berita->tanggal->isoFormat('D MMMM YYYY') }}
+                        </span>
+                    @endif
+                    <span class="flex items-center gap-1" title="Tanggal Upload">
+                        <span class="material-symbols-outlined text-[16px]">upload</span>
+                        {{ $berita->created_at->isoFormat('D MMMM YYYY') }}
+                    </span>
                 </div>
                 <h3 class="text-xl font-bold text-[#111418] mb-3 leading-tight group-hover:text-primary transition-colors">
                     {{ $berita->judul }}

@@ -355,7 +355,7 @@
                                     {{ $item->created_at->isoFormat('DD MMM YYYY') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
-                                    {{ $item->tanggal_daftar->isoFormat('DD MMM YYYY') }}
+                                    {{ $item->tanggal_daftar ? $item->tanggal_daftar->isoFormat('DD MMM YYYY') : '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     @if($item->foto)

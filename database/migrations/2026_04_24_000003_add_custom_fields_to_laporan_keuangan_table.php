@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('laporan_keuangan', function (Blueprint $table) {
             if (!Schema::hasColumn('laporan_keuangan', 'custom_fields')) {
-                $table->json('custom_fields')->nullable()->after('total_belanja');
+                $table->json('custom_fields')->nullable();
             }
         });
     }

@@ -134,7 +134,12 @@
                 </div>
                 <div class="p-5 flex flex-col flex-1">
                     <div class="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                        @if($berita->tanggal)
+                            <span class="material-symbols-outlined text-[16px]">event</span>
+                            {{ $berita->tanggal->isoFormat('D MMM YYYY') }}
+                            <span class="mx-1">•</span>
+                        @endif
+                        <span class="material-symbols-outlined text-[16px]">upload</span>
                         {{ $berita->created_at->isoFormat('D MMM YYYY') }}
                     </div>
                     <h3 class="text-lg font-bold text-[#111418] mb-2 leading-tight hover:text-primary transition-colors cursor-pointer">
@@ -180,7 +185,7 @@
                      '{{ Storage::url($item->foto) }}',
                      '{{ addslashes($item->nama) }}',
                      '{{ $item->jenis }}',
-                     '{{ $item->tanggal_daftar->isoFormat('DD MMMM YYYY') }}'
+                     '{{ $item->tanggal_daftar ? $item->tanggal_daftar->isoFormat('DD MMMM YYYY') : '-' }}'
                  )">
 
                 {{-- Foto --}}

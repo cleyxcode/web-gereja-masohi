@@ -44,6 +44,11 @@ class BeritaResource extends Resource
                     ->maxSize(2048)
                     ->columnSpanFull(),
 
+                Forms\Components\DatePicker::make('tanggal')
+                    ->label('Tanggal Berita')
+                    ->required()
+                    ->default(now()),
+
                 Forms\Components\RichEditor::make('isi')
                     ->label('Isi Berita')
                     ->required()
@@ -83,6 +88,11 @@ class BeritaResource extends Resource
                     ->limit(50)
                     ->wrap(),
 
+                Tables\Columns\TextColumn::make('tanggal')
+                    ->label('Tanggal Berita')
+                    ->date('d/m/Y')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('isi')
                     ->label('Isi')
                     ->limit(100)
@@ -96,7 +106,7 @@ class BeritaResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Tanggal Dibuat')
+                    ->label('Tanggal Upload')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
 

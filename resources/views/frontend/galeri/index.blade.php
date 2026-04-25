@@ -61,7 +61,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
         @foreach($galeri as $item)
         <div class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-             onclick="bukaFoto('{{ Storage::url($item->foto) }}', '{{ $item->nama }}', '{{ $item->jenis }}', '{{ $item->tanggal_daftar->isoFormat('DD MMMM YYYY') }}')">
+             onclick="bukaFoto('{{ Storage::url($item->foto) }}', '{{ $item->nama }}', '{{ $item->jenis }}', '{{ $item->tanggal_daftar ? $item->tanggal_daftar->isoFormat('DD MMMM YYYY') : '-' }}')">
 
             {{-- Foto --}}
             <div class="relative overflow-hidden aspect-square bg-neutral-100">
@@ -89,7 +89,7 @@
             {{-- Info --}}
             <div class="p-4">
                 <p class="text-sm font-bold text-neutral-900 truncate">{{ $item->nama }}</p>
-                <p class="text-xs text-neutral-500 mt-0.5">{{ $item->tanggal_daftar->isoFormat('DD MMM YYYY') }}</p>
+                <p class="text-xs text-neutral-500 mt-0.5">{{ $item->tanggal_daftar ? $item->tanggal_daftar->isoFormat('DD MMM YYYY') : '-' }}</p>
                 @if($item->catatan)
                 <p class="text-xs text-neutral-400 mt-2 line-clamp-2">{{ $item->catatan }}</p>
                 @endif
