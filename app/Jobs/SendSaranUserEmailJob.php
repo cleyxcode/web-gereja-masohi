@@ -25,7 +25,11 @@ class SendSaranUserEmailJob implements ShouldQueue
     public function handle(): void
     {
         if ($this->saran->user && $this->saran->user->email) {
-            Mail::to($this->saran->user->email)->send(new SaranUserNotification($this->saran));
+            try {
+                Mail::to($this->saran->user->email)->send(new SaranUserNotification($this->saran));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Gagal mengirim email balasan saran ke {$this->saran->user->email}: " . $e->getMessage());
+            }
         }
     }
 }

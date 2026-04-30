@@ -29,7 +29,11 @@ class SendJadwalEmailJob implements ShouldQueue
     {
         $users = User::where('role', 'jemaat')->where('is_approved', true)->get();
         foreach ($users as $user) {
-            Mail::to($user->email)->send(new JadwalNotification($this->jadwal, $this->isUpdate));
+            try {
+                Mail::to($user->email)->send(new JadwalNotification($this->jadwal, $this->isUpdate));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Gagal mengirim email jadwal ke {$user->email}: " . $e->getMessage());
+            }
         }
     }
 }

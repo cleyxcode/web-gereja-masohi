@@ -29,7 +29,11 @@ class SendBeritaEmailJob implements ShouldQueue
     {
         $users = User::where('role', 'jemaat')->where('is_approved', true)->get();
         foreach ($users as $user) {
-            Mail::to($user->email)->send(new BeritaNotification($this->berita, $this->isUpdate));
+            try {
+                Mail::to($user->email)->send(new BeritaNotification($this->berita, $this->isUpdate));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Gagal mengirim email berita ke {$user->email}: " . $e->getMessage());
+            }
         }
     }
 }

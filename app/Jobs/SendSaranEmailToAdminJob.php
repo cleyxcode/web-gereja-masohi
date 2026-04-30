@@ -27,7 +27,11 @@ class SendSaranEmailToAdminJob implements ShouldQueue
     {
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
-            Mail::to($admin->email)->send(new SaranAdminNotification($this->saran));
+            try {
+                Mail::to($admin->email)->send(new SaranAdminNotification($this->saran));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Gagal mengirim email saran ke admin {$admin->email}: " . $e->getMessage());
+            }
         }
     }
 }
