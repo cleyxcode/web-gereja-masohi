@@ -23,41 +23,45 @@
             {{-- ===== DESKTOP MENU ===== --}}
             <nav class="hidden lg:flex items-center gap-1">
                 @php
-                    // Menu publik (semua bisa akses)
-                    $navItems = [
+                    // Menu untuk tamu (belum login): Beranda, Jadwal, Berita, Galeri
+                    $guestNavItems = [
                         ['route' => 'home',         'label' => 'Beranda', 'icon' => 'home',           'match' => 'home'],
                         ['route' => 'jadwal.index', 'label' => 'Jadwal',  'icon' => 'calendar_month', 'match' => 'jadwal.*'],
                         ['route' => 'berita.index', 'label' => 'Berita',  'icon' => 'newspaper',      'match' => 'berita.*'],
                         ['route' => 'galeri.index', 'label' => 'Galeri',  'icon' => 'photo_library',  'match' => 'galeri.*'],
                     ];
 
-                    // Menu khusus jemaat (wajib login)
+                    // Menu setelah login: Berita, Galeri, Pendaftaran, Keuangan, Kotak Saran
                     $authNavItems = [
+                        ['route' => 'berita.index',      'label' => 'Berita',      'icon' => 'newspaper',       'match' => 'berita.*'],
+                        ['route' => 'galeri.index',      'label' => 'Galeri',      'icon' => 'photo_library',   'match' => 'galeri.*'],
                         ['route' => 'pendaftaran.index', 'label' => 'Pendaftaran', 'icon' => 'app_registration', 'match' => 'pendaftaran.*'],
                         ['route' => 'keuangan.index',    'label' => 'Keuangan',    'icon' => 'account_balance',  'match' => 'keuangan.*'],
                         ['route' => 'saran.create',      'label' => 'Kotak Saran', 'icon' => 'mail',             'match' => 'saran.*'],
                     ];
                 @endphp
 
-                {{-- Menu Publik --}}
-                @foreach($navItems as $item)
-                    @php $active = request()->routeIs($item['match']); @endphp
-                    <a href="{{ route($item['route']) }}"
-                       class="relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-200 group
-                              {{ $active ? 'text-primary bg-primary/8' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                        <span class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:scale-110"
-                              style="font-variation-settings:'FILL' {{ $active ? '1' : '0' }}">
-                            {{ $item['icon'] }}
-                        </span>
-                        {{ $item['label'] }}
-                        @if($active)
-                            <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-primary rounded-full"></span>
-                        @endif
-                    </a>
-                @endforeach
+                @guest
+                    {{-- Menu Tamu: Beranda, Jadwal, Berita, Galeri --}}
+                    @foreach($guestNavItems as $item)
+                        @php $active = request()->routeIs($item['match']); @endphp
+                        <a href="{{ route($item['route']) }}"
+                           class="relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-200 group
+                                  {{ $active ? 'text-primary bg-primary/8' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                            <span class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:scale-110"
+                                  style="font-variation-settings:'FILL' {{ $active ? '1' : '0' }}">
+                                {{ $item['icon'] }}
+                            </span>
+                            {{ $item['label'] }}
+                            @if($active)
+                                <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-primary rounded-full"></span>
+                            @endif
+                        </a>
+                    @endforeach
+                @endguest
 
-                {{-- Menu Khusus Login --}}
                 @auth
+                    {{-- Menu Setelah Login: Berita, Galeri, Pendaftaran, Keuangan, Kotak Saran --}}
                     @foreach($authNavItems as $item)
                         @php $active = request()->routeIs($item['match']); @endphp
                         <a href="{{ route($item['route']) }}"
@@ -158,22 +162,24 @@
         {{-- Mobile Nav Items --}}
         <div class="px-4 pt-3 pb-2 grid grid-cols-3 gap-2">
 
-            {{-- Menu Publik --}}
-            @foreach($navItems as $item)
-                @php $active = request()->routeIs($item['match']); @endphp
-                <a href="{{ route($item['route']) }}"
-                   class="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-center transition-all
-                          {{ $active ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800' }}">
-                    <span class="material-symbols-outlined text-[22px]"
-                          style="font-variation-settings:'FILL' {{ $active ? '1' : '0' }}">
-                        {{ $item['icon'] }}
-                    </span>
-                    <span class="text-[11px] font-semibold leading-tight">{{ $item['label'] }}</span>
-                </a>
-            @endforeach
+            @guest
+                {{-- Menu Tamu (mobile): Beranda, Jadwal, Berita, Galeri --}}
+                @foreach($guestNavItems as $item)
+                    @php $active = request()->routeIs($item['match']); @endphp
+                    <a href="{{ route($item['route']) }}"
+                       class="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-center transition-all
+                              {{ $active ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800' }}">
+                        <span class="material-symbols-outlined text-[22px]"
+                              style="font-variation-settings:'FILL' {{ $active ? '1' : '0' }}">
+                            {{ $item['icon'] }}
+                        </span>
+                        <span class="text-[11px] font-semibold leading-tight">{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
+            @endguest
 
-            {{-- Menu Khusus Login (mobile) --}}
             @auth
+                {{-- Menu Setelah Login (mobile): Berita, Galeri, Pendaftaran, Keuangan, Kotak Saran --}}
                 @foreach($authNavItems as $item)
                     @php $active = request()->routeIs($item['match']); @endphp
                     <a href="{{ route($item['route']) }}"

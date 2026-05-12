@@ -41,6 +41,7 @@ class BeritaResource extends Resource
                         '4:3',
                         '1:1',
                     ])
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
                     ->maxSize(2048)
                     ->columnSpanFull(),
 
