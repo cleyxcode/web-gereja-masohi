@@ -31,13 +31,12 @@
                         ['route' => 'galeri.index', 'label' => 'Galeri',  'icon' => 'photo_library',  'match' => 'galeri.*'],
                     ];
 
-                    // Menu setelah login: Berita, Galeri, Pendaftaran, Keuangan, Kotak Saran
+                    // Menu setelah login: Berita, Pendaftaran, Keuangan, Kotak Saran
                     $authNavItems = [
-                        ['route' => 'berita.index',      'label' => 'Berita',      'icon' => 'newspaper',       'match' => 'berita.*'],
-                        ['route' => 'galeri.index',      'label' => 'Galeri',      'icon' => 'photo_library',   'match' => 'galeri.*'],
-                        ['route' => 'pendaftaran.index', 'label' => 'Pendaftaran', 'icon' => 'app_registration', 'match' => 'pendaftaran.*'],
-                        ['route' => 'keuangan.index',    'label' => 'Keuangan',    'icon' => 'account_balance',  'match' => 'keuangan.*'],
-                        ['route' => 'saran.create',      'label' => 'Kotak Saran', 'icon' => 'mail',             'match' => 'saran.*'],
+                        ['route' => 'berita.index',      'label' => 'Berita',      'icon' => 'newspaper',        'match' => 'berita.*'],
+                        ['route' => 'pendaftaran.index', 'label' => 'Pendaftaran', 'icon' => 'app_registration',  'match' => 'pendaftaran.*'],
+                        ['route' => 'keuangan.index',    'label' => 'Keuangan',    'icon' => 'account_balance',   'match' => 'keuangan.*'],
+                        ['route' => 'saran.create',      'label' => 'Kotak Saran', 'icon' => 'mail',              'match' => 'saran.*'],
                     ];
                 @endphp
 
