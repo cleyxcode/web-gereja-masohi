@@ -83,52 +83,121 @@
             <div class="hidden md:flex items-center gap-2">
 
                 @auth
-                    {{-- Notification Bell --}}
-                    <div x-data="notificationManager" class="relative">
-                        <button @click="open = !open" @click.away="open = false"
-                                class="relative flex items-center justify-center w-9 h-9 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                            <span class="material-symbols-outlined text-[22px]">notifications</span>
+                    {{-- ===== NOTIFICATION BELL ===== --}}
+                    <div x-data="notificationManager" class="relative" @click.away="open = false">
+
+                        {{-- Bell Button --}}
+                        <button @click="open = !open"
+                                class="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200"
+                                :class="open ? 'bg-primary/10 text-primary shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'">
+                            <span class="material-symbols-outlined text-[22px]"
+                                  :style="open ? 'font-variation-settings: FILL 1' : 'font-variation-settings: FILL 0'">
+                                notifications
+                            </span>
+                            {{-- Number badge --}}
                             <template x-if="unreadCount > 0">
-                                <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                <span x-text="unreadCount > 9 ? '9+' : unreadCount"
+                                      class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white leading-none">
+                                </span>
                             </template>
                         </button>
 
-                        {{-- Dropdown Notifications --}}
+                        {{-- Dropdown Panel --}}
                         <div x-show="open"
                              x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 scale-95 translate-y-2"
-                             style="display: none;"
-                             class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl shadow-black/5 border border-gray-100 overflow-hidden z-50">
-                            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                                <h3 class="text-sm font-bold text-gray-800">Notifikasi</h3>
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                             style="display:none;"
+                             class="absolute right-0 mt-3 w-[360px] bg-white rounded-2xl shadow-2xl shadow-black/10 border border-gray-100 z-50 overflow-hidden">
+
+                            {{-- Header --}}
+                            <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings:'FILL' 1">notifications_active</span>
+                                    <h3 class="text-sm font-bold text-gray-900">Notifikasi</h3>
+                                    <template x-if="unreadCount > 0">
+                                        <span x-text="unreadCount + ' baru'"
+                                              class="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-full border border-red-100">
+                                        </span>
+                                    </template>
+                                </div>
                                 @if(Auth::user()->unreadNotifications->count() > 0)
                                     <form action="{{ route('notifications.markAllRead') }}" method="POST" class="m-0">
                                         @csrf
-                                        <button type="submit" class="text-[11px] font-semibold text-primary hover:text-primary/80">Tandai semua dibaca</button>
+                                        <button type="submit"
+                                                class="flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary/70 transition-colors group">
+                                            <span class="material-symbols-outlined text-[13px]">done_all</span>
+                                            Tandai semua dibaca
+                                        </button>
                                     </form>
                                 @endif
                             </div>
-                            <div class="max-h-[300px] overflow-y-auto">
-                                @forelse(Auth::user()->notifications()->take(10)->get() as $notification)
-                                    <a href="{{ route('notifications.read', $notification->id) }}"
-                                       class="block px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors {{ is_null($notification->read_at) ? 'bg-primary/5' : '' }}">
-                                        <p class="text-[13px] font-semibold text-gray-800 mb-0.5">{{ $notification->data['judul'] ?? 'Notifikasi' }}</p>
-                                        <p class="text-[12px] text-gray-500 leading-tight mb-1">{{ $notification->data['pesan'] ?? '' }}</p>
-                                        <p class="text-[10px] text-gray-400 font-medium">{{ $notification->created_at->diffForHumans() }}</p>
+
+                            {{-- Notification List --}}
+                            <div class="max-h-[380px] overflow-y-auto divide-y divide-gray-50">
+                                @forelse(Auth::user()->notifications()->take(15)->get() as $notif)
+                                    @php
+                                        $isUnread = is_null($notif->read_at);
+                                        $judul    = $notif->data['judul'] ?? 'Notifikasi';
+                                        $pesan    = $notif->data['pesan'] ?? '';
+                                        $isJadwal = isset($notif->data['jadwal_id']);
+                                        $icon     = $isJadwal ? 'calendar_month' : 'newspaper';
+                                        $iconBg   = $isJadwal ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500';
+                                    @endphp
+                                    <a href="{{ route('notifications.read', $notif->id) }}"
+                                       class="flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50/80 transition-all duration-150 group relative {{ $isUnread ? 'bg-primary/[0.03]' : 'bg-white' }}">
+
+                                        {{-- Unread left bar --}}
+                                        @if($isUnread)
+                                            <span class="absolute left-0 top-0 bottom-0 w-[3px] bg-primary rounded-r-full"></span>
+                                        @endif
+
+                                        {{-- Icon --}}
+                                        <div class="flex-shrink-0 w-9 h-9 rounded-xl {{ $iconBg }} flex items-center justify-center mt-0.5 group-hover:scale-105 transition-transform duration-200">
+                                            <span class="material-symbols-outlined text-[17px]" style="font-variation-settings:'FILL' 1">{{ $icon }}</span>
+                                        </div>
+
+                                        {{-- Content --}}
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[12.5px] font-semibold leading-snug mb-0.5 line-clamp-2 {{ $isUnread ? 'text-gray-900' : 'text-gray-600' }}">
+                                                {{ $judul }}
+                                            </p>
+                                            <p class="text-[11.5px] text-gray-500 leading-snug mb-1 line-clamp-2">{{ $pesan }}</p>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-[11px] text-gray-300">schedule</span>
+                                                <span class="text-[10.5px] text-gray-400 font-medium">{{ $notif->created_at->diffForHumans() }}</span>
+                                                @if($isUnread)
+                                                    <span class="ml-auto w-1.5 h-1.5 rounded-full bg-primary/70 flex-shrink-0"></span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- Arrow --}}
+                                        <span class="material-symbols-outlined text-[16px] text-gray-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200 mt-2 flex-shrink-0">chevron_right</span>
                                     </a>
                                 @empty
-                                    <div class="px-4 py-6 text-center">
-                                        <span class="material-symbols-outlined text-[32px] text-gray-300 mb-2">notifications_off</span>
-                                        <p class="text-xs text-gray-500 font-medium">Belum ada notifikasi</p>
+                                    <div class="flex flex-col items-center justify-center py-10 px-4 text-center">
+                                        <div class="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-3">
+                                            <span class="material-symbols-outlined text-[30px] text-gray-300">notifications_off</span>
+                                        </div>
+                                        <p class="text-[13px] font-semibold text-gray-600 mb-1">Belum ada notifikasi</p>
+                                        <p class="text-[11px] text-gray-400 leading-relaxed">Notifikasi berita & jadwal ibadah baru<br>akan muncul di sini.</p>
                                     </div>
                                 @endforelse
                             </div>
+
+                            {{-- Footer --}}
+                            @if(Auth::user()->notifications()->count() > 0)
+                                <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50/50 text-center">
+                                    <span class="text-[11px] text-gray-400">Menampilkan 15 notifikasi terbaru</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
+
                     {{-- Profile Button --}}
                     <a href="{{ route('profile') }}"
                        class="flex items-center gap-2.5 pl-2 pr-4 py-2 rounded-xl text-sm font-semibold text-gray-700
