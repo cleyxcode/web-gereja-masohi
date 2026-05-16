@@ -71,4 +71,9 @@ class User extends Authenticatable implements FilamentUser
     {
         $this->notify(new ResetPasswordNotification($token));
     }
+
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
 }

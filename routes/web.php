@@ -96,5 +96,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications/fetch', [\App\Http\Controllers\NotificationController::class, 'fetchUnread'])->name('notifications.fetch');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
     Route::get('/notifications/{id}/read',      [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
+    
+    // Web Push Subscriptions
+    Route::post('/push/subscribe',   [\App\Http\Controllers\NotificationController::class, 'pushSubscribe'])->name('push.subscribe');
+    Route::post('/push/unsubscribe', [\App\Http\Controllers\NotificationController::class, 'pushUnsubscribe'])->name('push.unsubscribe');
 
 });

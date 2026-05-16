@@ -377,7 +377,56 @@ async function handleLogout() {
 }
 
 @auth
-// Real-time Notification Polling & Browser Push
+// Helper to convert base64 to Uint8Array for VAPID keys
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+// Background Push Notification via Service Worker
+async function initServiceWorker() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    
+    try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        
+        // Cek izin notifikasi
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+
+        // Subscribe to push
+        const vapidPublicKey = "{{ env('VAPID_PUBLIC_KEY') }}";
+        const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
+            });
+        }
+
+        // Kirim subscription ke backend
+        await fetch('{{ route("push.subscribe") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(subscription)
+        });
+
+    } catch (e) {
+        console.error('Service Worker / Push failed:', e);
+    }
+}
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('notificationManager', () => ({
         open: false,
@@ -386,12 +435,10 @@ document.addEventListener('alpine:init', () => {
         lastCheck: Date.now(),
         
         init() {
-            // Minta izin Push Notification Desktop
-            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-                Notification.requestPermission();
-            }
+            // Minta izin Push Notification Desktop & Register Service Worker
+            initServiceWorker();
 
-            // Polling setiap 10 detik
+            // Polling setiap 10 detik (untuk update UI navbar saja, tidak untuk popup desktop)
             setInterval(() => {
                 this.fetchNotifications();
             }, 10000);
@@ -401,19 +448,8 @@ document.addEventListener('alpine:init', () => {
             try {
                 const res = await fetch('{{ route("notifications.fetch") }}');
                 const data = await res.json();
-                
-                // Jika ada notif baru, tampilkan Push Notification di OS Desktop
-                if (data.count > this.unreadCount) {
-                    const newNotif = data.latest.find(n => n.read_at === null);
-                    if (newNotif && 'Notification' in window && Notification.permission === 'granted') {
-                        new Notification(newNotif.data.judul || "Gereja Bethesda", {
-                            body: newNotif.data.pesan || "Anda memiliki notifikasi baru.",
-                            icon: "{{ asset('images/logoupdate.png') }}"
-                        });
-                    }
-                }
-                
                 this.unreadCount = data.count;
+                // Note: Popup desktop sekarang diurus 100% oleh Service Worker di belakang layar.
             } catch (err) {
                 console.error("Gagal mengambil notifikasi", err);
             }

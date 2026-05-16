@@ -37,4 +37,36 @@ class NotificationController extends Controller
 
         return back();
     }
+
+    public function pushSubscribe(Request $request)
+    {
+        $request->validate([
+            'endpoint'    => 'required',
+            'keys.p256dh' => 'required',
+            'keys.auth'   => 'required',
+        ]);
+
+        $user = Auth::user();
+
+        $user->pushSubscriptions()->updateOrCreate(
+            ['endpoint' => $request->endpoint],
+            [
+                'public_key' => $request->keys['p256dh'],
+                'auth_token' => $request->keys['auth'],
+            ]
+        );
+
+        return response()->json(['success' => true]);
+    }
+
+    public function pushUnsubscribe(Request $request)
+    {
+        $request->validate([
+            'endpoint' => 'required',
+        ]);
+
+        Auth::user()->pushSubscriptions()->where('endpoint', $request->endpoint)->delete();
+
+        return response()->json(['success' => true]);
+    }
 }
