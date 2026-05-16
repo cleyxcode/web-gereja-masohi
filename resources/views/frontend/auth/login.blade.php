@@ -71,7 +71,7 @@
                         <button
                             class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
                             type="button"
-                            data-toggle-password
+                            data-toggle-password="password"
                         >
                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
@@ -206,8 +206,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 // Toggle password visibility
 document.querySelectorAll('[data-toggle-password]').forEach(btn => {
     btn.addEventListener('click', function() {
-        const input = this.closest('.relative').querySelector('input');
+        const targetId = this.getAttribute('data-toggle-password');
+        const input = document.getElementById(targetId);
         const icon = this.querySelector('.material-symbols-outlined');
+        if (!input) return;
         if (input.type === 'password') {
             input.type = 'text';
             icon.textContent = 'visibility_off';
