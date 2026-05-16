@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\BeritaResource\Pages;
 
 use App\Filament\Resources\BeritaResource;
+use App\Jobs\SendBeritaEmailJob;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
-
 
 class CreateBerita extends CreateRecord
 {
@@ -13,10 +13,7 @@ class CreateBerita extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Set created_by dan buang kolom yang tidak ada di tabel
         $data['created_by'] = auth()->id();
-        unset($data['send_email_notification']);
-
         return $data;
     }
 
@@ -27,18 +24,13 @@ class CreateBerita extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Baca langsung dari Livewire raw state (bukan dari $data yang sudah dimutasi)
-        $rawState = $this->form->getRawState();
-        $sendEmail = (bool) ($rawState['send_email_notification'] ?? false);
+        // Kirim notifikasi database ke seluruh jemaat secara otomatis
+        SendBeritaEmailJob::dispatch($this->record, false);
 
-        if ($sendEmail) {
-            \App\Jobs\SendBeritaEmailJob::dispatch($this->record, false);
-
-            Notification::make()
-                ->title('Notifikasi Email Dijadwalkan')
-                ->body('Email berita sedang dikirim ke seluruh jemaat di background.')
-                ->success()
-                ->send();
-        }
+        Notification::make()
+            ->title('Notifikasi Terkirim!')
+            ->body('Notifikasi berita baru sudah dikirim ke seluruh jemaat.')
+            ->success()
+            ->send();
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\JadwalIbadahResource\Pages;
 
 use App\Filament\Resources\JadwalIbadahResource;
+use App\Jobs\SendJadwalEmailJob;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
@@ -14,8 +15,6 @@ class CreateJadwalIbadah extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['created_by'] = Auth::id();
-        unset($data['send_email_notification']);
-
         return $data;
     }
 
@@ -26,17 +25,13 @@ class CreateJadwalIbadah extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $rawState = $this->form->getRawState();
-        $sendEmail = (bool) ($rawState['send_email_notification'] ?? false);
+        // Kirim notifikasi database ke seluruh jemaat secara otomatis
+        SendJadwalEmailJob::dispatch($this->record, false);
 
-        if ($sendEmail) {
-            \App\Jobs\SendJadwalEmailJob::dispatch($this->record, false);
-
-            Notification::make()
-                ->title('Notifikasi Email Dijadwalkan')
-                ->body('Email jadwal ibadah sedang dikirim ke seluruh jemaat di background.')
-                ->success()
-                ->send();
-        }
+        Notification::make()
+            ->title('Notifikasi Terkirim!')
+            ->body('Notifikasi jadwal ibadah baru sudah dikirim ke seluruh jemaat.')
+            ->success()
+            ->send();
     }
 }

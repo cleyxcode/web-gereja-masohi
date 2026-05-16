@@ -70,11 +70,6 @@ class BeritaResource extends Resource
                         'undo',
                     ]),
                     
-                Forms\Components\Toggle::make('send_email_notification')
-                    ->label('Kirim Notifikasi Email ke Jemaat')
-                    ->helperText('Jika diaktifkan, sistem akan mengirim email pemberitahuan ke seluruh jemaat yang terdaftar.')
-                    ->default(false)
-                    ->columnSpanFull(),
             ]);
     }
 
