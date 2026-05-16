@@ -83,6 +83,52 @@
             <div class="hidden md:flex items-center gap-2">
 
                 @auth
+                    {{-- Notification Bell --}}
+                    <div x-data="notificationManager" class="relative">
+                        <button @click="open = !open" @click.away="open = false"
+                                class="relative flex items-center justify-center w-9 h-9 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+                            <span class="material-symbols-outlined text-[22px]">notifications</span>
+                            <template x-if="unreadCount > 0">
+                                <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                            </template>
+                        </button>
+
+                        {{-- Dropdown Notifications --}}
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+                             style="display: none;"
+                             class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl shadow-black/5 border border-gray-100 overflow-hidden z-50">
+                            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                <h3 class="text-sm font-bold text-gray-800">Notifikasi</h3>
+                                @if(Auth::user()->unreadNotifications->count() > 0)
+                                    <form action="{{ route('notifications.markAllRead') }}" method="POST" class="m-0">
+                                        @csrf
+                                        <button type="submit" class="text-[11px] font-semibold text-primary hover:text-primary/80">Tandai semua dibaca</button>
+                                    </form>
+                                @endif
+                            </div>
+                            <div class="max-h-[300px] overflow-y-auto">
+                                @forelse(Auth::user()->notifications()->take(10)->get() as $notification)
+                                    <a href="{{ route('notifications.read', $notification->id) }}"
+                                       class="block px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors {{ is_null($notification->read_at) ? 'bg-primary/5' : '' }}">
+                                        <p class="text-[13px] font-semibold text-gray-800 mb-0.5">{{ $notification->data['judul'] ?? 'Notifikasi' }}</p>
+                                        <p class="text-[12px] text-gray-500 leading-tight mb-1">{{ $notification->data['pesan'] ?? '' }}</p>
+                                        <p class="text-[10px] text-gray-400 font-medium">{{ $notification->created_at->diffForHumans() }}</p>
+                                    </a>
+                                @empty
+                                    <div class="px-4 py-6 text-center">
+                                        <span class="material-symbols-outlined text-[32px] text-gray-300 mb-2">notifications_off</span>
+                                        <p class="text-xs text-gray-500 font-medium">Belum ada notifikasi</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
                     {{-- Profile Button --}}
                     <a href="{{ route('profile') }}"
                        class="flex items-center gap-2.5 pl-2 pr-4 py-2 rounded-xl text-sm font-semibold text-gray-700
@@ -260,5 +306,51 @@ async function handleLogout() {
         showToast('Terjadi kesalahan', 'error');
     }
 }
+
+@auth
+// Real-time Notification Polling & Browser Push
+document.addEventListener('alpine:init', () => {
+    Alpine.data('notificationManager', () => ({
+        open: false,
+        unreadCount: {{ Auth::user()->unreadNotifications->count() }},
+        notifications: [],
+        lastCheck: Date.now(),
+        
+        init() {
+            // Minta izin Push Notification Desktop
+            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+
+            // Polling setiap 10 detik
+            setInterval(() => {
+                this.fetchNotifications();
+            }, 10000);
+        },
+
+        async fetchNotifications() {
+            try {
+                const res = await fetch('{{ route("notifications.fetch") }}');
+                const data = await res.json();
+                
+                // Jika ada notif baru, tampilkan Push Notification di OS Desktop
+                if (data.count > this.unreadCount) {
+                    const newNotif = data.latest.find(n => n.read_at === null);
+                    if (newNotif && 'Notification' in window && Notification.permission === 'granted') {
+                        new Notification(newNotif.data.judul || "Gereja Bethesda", {
+                            body: newNotif.data.pesan || "Anda memiliki notifikasi baru.",
+                            icon: "{{ asset('images/logoupdate.png') }}"
+                        });
+                    }
+                }
+                
+                this.unreadCount = data.count;
+            } catch (err) {
+                console.error("Gagal mengambil notifikasi", err);
+            }
+        }
+    }));
+});
+@endauth
 </script>
 @endpush

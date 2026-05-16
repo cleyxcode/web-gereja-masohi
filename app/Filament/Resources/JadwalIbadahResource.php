@@ -74,7 +74,6 @@ class JadwalIbadahResource extends Resource
                     ->label('Kirim Notifikasi Email ke Jemaat')
                     ->helperText('Jika diaktifkan, sistem akan mengirim email pemberitahuan ke seluruh jemaat yang terdaftar.')
                     ->default(false)
-                    ->dehydrated(false)
                     ->columnSpanFull(),
             ]);
     }

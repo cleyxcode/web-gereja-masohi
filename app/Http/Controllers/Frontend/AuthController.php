@@ -48,7 +48,8 @@ class AuthController extends Controller
 
         $email = trim($request->email);
         $password = $request->password;
-        $remember = $request->boolean('remember');
+        // Selalu set 'remember' jadi true agar user tetap login meskipun browser ditutup
+        $remember = true;
 
         $user = User::where('email', $email)->first();
 

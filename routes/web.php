@@ -92,4 +92,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/avatar',  [ProfileController::class, 'updateAvatar'])->name('profile.update-avatar');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 
+    // Notifications
+    Route::get('/notifications/fetch', [\App\Http\Controllers\NotificationController::class, 'fetchUnread'])->name('notifications.fetch');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('/notifications/{id}/read',      [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
+
 });

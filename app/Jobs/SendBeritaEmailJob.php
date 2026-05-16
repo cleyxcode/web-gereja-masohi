@@ -2,39 +2,43 @@
 
 namespace App\Jobs;
 
-use App\Mail\BeritaNotification;
 use App\Models\Berita;
 use App\Models\User;
+use App\Notifications\BeritaDatabaseNotification;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 
-class SendBeritaEmailJob
+class SendBeritaEmailJob implements ShouldQueue
 {
-    use Dispatchable, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $berita;
-    public $isUpdate;
+    /**
+     * Timeout per job: 60 detik
+     */
+    public int $timeout = 60;
 
-    public function __construct(Berita $berita, bool $isUpdate = false)
-    {
-        $this->berita  = $berita;
-        $this->isUpdate = $isUpdate;
-    }
+    public int $tries = 2;
+
+    public function __construct(
+        public Berita $berita,
+        public bool $isUpdate = false
+    ) {}
 
     public function handle(): void
     {
-        $users = User::where('role', 'jemaat')->where('is_approved', true)->get();
+        // Ambil semua jemaat
+        $users = User::where('role', 'jemaat')
+            ->where('is_approved', true)
+            ->get();
 
-        foreach ($users as $user) {
-            try {
-                Mail::to($user->email)->send(new BeritaNotification($this->berita, $this->isUpdate));
-            } catch (\Exception $e) {
-                Log::error("Gagal mengirim email berita ke {$user->email}: " . $e->getMessage());
-            }
-        }
+        Log::info("[SendBeritaNotification] Mengirim notifikasi aplikasi ke {$users->count()} jemaat untuk berita ID {$this->berita->id}");
+
+        // Mengirim notifikasi database ke semua jemaat sekaligus
+        Notification::send($users, new BeritaDatabaseNotification($this->berita, $this->isUpdate));
     }
 }
-
