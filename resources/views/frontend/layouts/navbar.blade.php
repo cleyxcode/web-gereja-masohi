@@ -87,7 +87,7 @@
                     <div x-data="notificationManager" class="relative" @click.away="open = false">
 
                         {{-- Bell Button --}}
-                        <button @click="open = !open"
+                        <button @click="toggleBell()"
                                 class="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200"
                                 :class="open ? 'bg-primary/10 text-primary shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'">
                             <span class="material-symbols-outlined text-[22px]"
@@ -435,8 +435,11 @@ document.addEventListener('alpine:init', () => {
         lastCheck: Date.now(),
         
         init() {
-            // Minta izin Push Notification Desktop & Register Service Worker
-            initServiceWorker();
+            // Register Service Worker secara pasif jika sudah ada izin, 
+            // tanpa memicu popup agar tidak diblokir browser.
+            if ('Notification' in window && Notification.permission === 'granted') {
+                initServiceWorker();
+            }
 
             // Polling setiap 10 detik (untuk update UI navbar saja, tidak untuk popup desktop)
             setInterval(() => {
@@ -444,12 +447,27 @@ document.addEventListener('alpine:init', () => {
             }, 10000);
         },
 
+        toggleBell() {
+            this.open = !this.open;
+            
+            // Minta izin secara aktif saat tombol lonceng diklik (User Gesture)
+            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        initServiceWorker();
+                        showToast('Notifikasi latar belakang diaktifkan!', 'success');
+                    }
+                });
+            } else if ('Notification' in window && Notification.permission === 'granted') {
+                initServiceWorker(); // Pastikan SW berjalan
+            }
+        },
+
         async fetchNotifications() {
             try {
                 const res = await fetch('{{ route("notifications.fetch") }}');
                 const data = await res.json();
                 this.unreadCount = data.count;
-                // Note: Popup desktop sekarang diurus 100% oleh Service Worker di belakang layar.
             } catch (err) {
                 console.error("Gagal mengambil notifikasi", err);
             }
