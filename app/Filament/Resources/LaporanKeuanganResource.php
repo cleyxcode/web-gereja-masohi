@@ -50,13 +50,13 @@ class LaporanKeuanganResource extends Resource
                             ->live()
                             ->afterStateUpdated(function (Get $get, Forms\Set $set, ?string $state) {
                                 if ($state && !$get('saldo_awal')) {
-                                    $lastLaporan = \App\Models\LaporanKeuangan::where('kategori', $state)
+                                    $lastLaporan = LaporanKeuangan::where('kategori', $state)
                                         ->orderBy('periode_akhir', 'desc')
                                         ->first();
                                     
                                     if ($lastLaporan) {
                                         $set('saldo_awal', $lastLaporan->saldo_akhir);
-                                        $set('periode_awal', $lastLaporan->periode_akhir->addDay()->format('Y-m-d'));
+                                        $set('periode_awal', \Carbon\Carbon::parse($lastLaporan->periode_akhir)->addDay()->format('Y-m-d'));
                                     }
                                 }
                             })
@@ -94,7 +94,7 @@ class LaporanKeuanganResource extends Resource
                             ->placeholder('0')
                             ->prefix('Rp')
                             ->helperText(fn (Get $get) =>
-                                ($get('saldo_awal') ? 'Terbilang: ' . \App\Models\LaporanKeuangan::terbilang((int)$get('saldo_awal')) . ' Rupiah.' : '') . 
+                                ($get('saldo_awal') ? 'Terbilang: ' . LaporanKeuangan::terbilang((int)$get('saldo_awal')) . ' Rupiah.' : '') . 
                                 ' | Saldo Per ' . ($get('periode_awal')
                                     ? \Carbon\Carbon::parse($get('periode_awal'))->translatedFormat('d F Y')
                                     : '...')

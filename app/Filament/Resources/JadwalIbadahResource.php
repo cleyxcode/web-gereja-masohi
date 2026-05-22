@@ -34,7 +34,7 @@ class JadwalIbadahResource extends Resource
                     ->rule(function () {
                         return function (string $attribute, $value, \Closure $fail) {
                             $date = \Carbon\Carbon::parse($value);
-                            if ($date->dayOfWeek !== \Carbon\Carbon::SUNDAY) {
+                            if ($date->dayOfWeek !== \Carbon\CarbonInterface::SUNDAY) {
                                 $fail('Tanggal harus hari Minggu.');
                             }
                         };

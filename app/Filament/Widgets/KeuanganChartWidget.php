@@ -27,7 +27,7 @@ class KeuanganChartWidget extends ChartWidget
         $saldoAkhir  = [];
 
         foreach ($laporan as $l) {
-            $labels[]     = $l->judul . ' (' . $l->periode_akhir->format('d/m/Y') . ')';
+            $labels[]     = $l->judul . ' (' . \Carbon\Carbon::parse($l->periode_akhir)->format('d/m/Y') . ')';
             $penerimaan[] = (float) $l->total_penerimaan;
             $belanja[]    = (float) $l->total_belanja;
             $saldoAkhir[] = $l->saldo_akhir;

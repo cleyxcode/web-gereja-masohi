@@ -149,6 +149,7 @@ class PendaftaranController extends Controller
             // Kirim notifikasi ke semua admin (in-app Filament + email)
             $admins = User::where('role', 'admin')->get();
             foreach ($admins as $admin) {
+                /** @var \App\Models\User $admin */
                 $admin->notify(new PendaftaranMasukNotification($pendaftaran->load('user')));
             }
 

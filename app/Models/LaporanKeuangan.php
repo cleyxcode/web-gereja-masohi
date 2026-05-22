@@ -69,7 +69,7 @@ class LaporanKeuangan extends Model
     public function getFileLaporanUrlAttribute(): ?string
     {
         return $this->file_laporan
-            ? Storage::disk('public')->url($this->file_laporan)
+            ? asset('storage/' . $this->file_laporan)
             : null;
     }
 
